@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CardList(
+fun cardList(
     cardSpacing: Dp = 8.dp,
     modifier: Modifier = Modifier,
 ) {
@@ -40,8 +40,8 @@ fun CardList(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(cardSpacing),
     ) {
-        items(50) { index ->
-            CardListItem(
+        items(ITEM_COUNT) { index ->
+            cardListItem(
                 index = index,
                 cardSpacingPx = cardSpacingPx,
                 firstVisibleItemIndex = firstVisibleItemIndex,
@@ -62,45 +62,50 @@ private fun Float.toDp(): Dp {
 }
 
 @Composable
-fun CardListItem(
+fun cardListItem(
     index: Int,
     cardSpacingPx: Float,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var cardHeightPx by remember { mutableFloatStateOf(0f) }
-    val cardGraphicsLayerState = rememberCardGraphicsLayerState(
-        index = index,
-        cardSpacingPx = cardSpacingPx,
-        firstVisibleItemIndex = firstVisibleItemIndex,
-        firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffsetPx,
-        cardHeightPx = cardHeightPx
-    )
+    val cardGraphicsLayerState =
+        rememberCardGraphicsLayerState(
+            index = index,
+            cardSpacingPx = cardSpacingPx,
+            firstVisibleItemIndex = firstVisibleItemIndex,
+            firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffsetPx,
+            cardHeightPx = cardHeightPx,
+        )
     Card(
-        modifier = modifier.graphicsLayer {
-            this.translationY = cardGraphicsLayerState.translationY
-            this.scaleX = cardGraphicsLayerState.scale
-            this.scaleY = cardGraphicsLayerState.scale
-            this.alpha = cardGraphicsLayerState.alpha
-        }.fillMaxWidth()
+        modifier =
+            modifier.graphicsLayer {
+                this.translationY = cardGraphicsLayerState.translationY
+                this.scaleX = cardGraphicsLayerState.scale
+                this.scaleY = cardGraphicsLayerState.scale
+                this.alpha = cardGraphicsLayerState.alpha
+            }.fillMaxWidth(),
     ) {
         Box(
-            modifier = Modifier.onGloballyPositioned {
-                cardHeightPx = it.size.height.toFloat()
-            }
+            modifier =
+                Modifier.onGloballyPositioned {
+                    cardHeightPx = it.size.height.toFloat()
+                },
         ) {
             Text(
                 modifier = Modifier.padding(16.dp),
-                text = "Card $index\n" +
+                text =
+                    "Card $index\n" +
                         "offset: ${cardGraphicsLayerState.offset}\n" +
-                        "cardHeightPx: $cardHeightPx\n"
+                        "cardHeightPx: $cardHeightPx\n",
             )
             Box(
-                modifier = Modifier
-                    .height(cardHeightPx.toDp())
-                    .background(Color.Black.copy(alpha = cardGraphicsLayerState.shadowAlpha))
-                    .fillMaxWidth()
+                modifier =
+                    Modifier
+                        .height(cardHeightPx.toDp())
+                        .background(Color.Black.copy(alpha = cardGraphicsLayerState.shadowAlpha))
+                        .fillMaxWidth(),
             )
         }
     }
@@ -111,7 +116,7 @@ private class CardGraphicsLayerState(
     val translationY: Float,
     val scale: Float,
     val alpha: Float,
-    val shadowAlpha: Float
+    val shadowAlpha: Float,
 )
 
 @Composable
@@ -120,30 +125,32 @@ private fun rememberCardGraphicsLayerState(
     cardSpacingPx: Float,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
-    cardHeightPx: Float
+    cardHeightPx: Float,
 ): CardGraphicsLayerState {
-    val offset = if (firstVisibleItemIndex >= index && cardHeightPx > 0f) {
-        val offsetRatio = firstVisibleItemScrollOffsetPx / (cardHeightPx + cardSpacingPx)
-        firstVisibleItemIndex - index + offsetRatio
-    } else {
-        0f
-    }
+    val offset =
+        if (firstVisibleItemIndex >= index && cardHeightPx > 0f) {
+            val offsetRatio = firstVisibleItemScrollOffsetPx / (cardHeightPx + cardSpacingPx)
+            firstVisibleItemIndex - index + offsetRatio
+        } else {
+            0f
+        }
     return remember(offset) {
-        val cardScale = 1f - offset * CardScaleFactor
-        val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * CardTranslationFactor
-        val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * CardAlphaFactor).coerceIn(0f, 1f)
-        val cardShadowAlpha = (offset * CardShadowAlphaFactor).coerceIn(0f, 1f)
+        val cardScale = 1f - offset * CARD_SCALE_FACTOR
+        val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * CARD_TRANSLATION_FACTOR
+        val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * CARD_ALPHA_FACTOR).coerceIn(0f, 1f)
+        val cardShadowAlpha = (offset * CARD_SHADOW_ALPHA_FACTOR).coerceIn(0f, 1f)
         CardGraphicsLayerState(
             offset = offset,
             translationY = cardTranslationY,
             scale = cardScale,
             alpha = cardAlpha,
-            shadowAlpha = cardShadowAlpha
+            shadowAlpha = cardShadowAlpha,
         )
     }
 }
 
-private const val CardScaleFactor = 0.05f
-private const val CardTranslationFactor = 0.95f
-private const val CardAlphaFactor = 10f
-private const val CardShadowAlphaFactor = 0.2f
+private const val ITEM_COUNT = 50
+private const val CARD_SCALE_FACTOR = 0.05f
+private const val CARD_TRANSLATION_FACTOR = 0.95f
+private const val CARD_ALPHA_FACTOR = 10f
+private const val CARD_SHADOW_ALPHA_FACTOR = 0.2f

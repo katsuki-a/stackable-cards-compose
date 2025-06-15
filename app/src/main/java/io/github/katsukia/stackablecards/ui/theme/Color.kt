@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.github.katsukia.stackablecards.ui.theme
 
 import androidx.compose.ui.graphics.Color
