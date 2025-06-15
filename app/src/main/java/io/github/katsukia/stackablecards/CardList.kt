@@ -33,7 +33,8 @@ fun CardList(
     val listState = rememberLazyListState()
     val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
     val firstVisibleItemScrollOffset by remember { derivedStateOf { listState.firstVisibleItemScrollOffset.toFloat() } }
-    val cardSpacingPx = cardSpacing.toPx()
+    val cardSpacingPx = with(LocalDensity.current) { cardSpacing.toPx() }
+
     LazyColumn(
         modifier = modifier,
         state = listState,
@@ -50,11 +51,6 @@ fun CardList(
             )
         }
     }
-}
-
-@Composable
-private fun Dp.toPx(): Float {
-    return with(LocalDensity.current) { this@toPx.toPx() }
 }
 
 @Composable
@@ -103,7 +99,7 @@ private fun CardListItem(
     }
 }
 
-private class CardGraphicsLayerState(
+private data class CardGraphicsLayerState(
     val translationY: Float,
     val scale: Float,
     val alpha: Float,
@@ -124,7 +120,7 @@ private fun rememberCardGraphicsLayerState(
     } else {
         0f
     }
-    return remember(offset) {
+    return remember(offset, cardHeightPx) {
         val cardScale = 1f - offset * CardScaleFactor
         val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * CardTranslationFactor
         val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * CardAlphaFactor).coerceIn(0f, 1f)
