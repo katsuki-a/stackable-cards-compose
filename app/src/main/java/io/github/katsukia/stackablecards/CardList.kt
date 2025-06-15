@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -29,6 +27,7 @@ import androidx.compose.ui.unit.dp
 fun CardList(
     cardSpacing: Dp = 8.dp,
     modifier: Modifier = Modifier,
+    content: @Composable (index: Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
     val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -46,6 +45,7 @@ fun CardList(
                 cardSpacingPx = cardSpacingPx,
                 firstVisibleItemIndex = firstVisibleItemIndex,
                 firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
+                content = content
             )
         }
     }
@@ -62,12 +62,13 @@ private fun Float.toDp(): Dp {
 }
 
 @Composable
-fun CardListItem(
+private fun CardListItem(
     index: Int,
     cardSpacingPx: Float,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    content: @Composable (index: Int) -> Unit,
 ) {
     var cardHeightPx by remember { mutableFloatStateOf(0f) }
     val cardGraphicsLayerState = rememberCardGraphicsLayerState(
@@ -90,12 +91,7 @@ fun CardListItem(
                 cardHeightPx = it.size.height.toFloat()
             }
         ) {
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = "Card $index\n" +
-                        "offset: ${cardGraphicsLayerState.offset}\n" +
-                        "cardHeightPx: $cardHeightPx\n"
-            )
+            content(index)
             Box(
                 modifier = Modifier
                     .height(cardHeightPx.toDp())
@@ -107,7 +103,6 @@ fun CardListItem(
 }
 
 private class CardGraphicsLayerState(
-    val offset: Float,
     val translationY: Float,
     val scale: Float,
     val alpha: Float,
@@ -134,7 +129,6 @@ private fun rememberCardGraphicsLayerState(
         val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * CardAlphaFactor).coerceIn(0f, 1f)
         val cardShadowAlpha = (offset * CardShadowAlphaFactor).coerceIn(0f, 1f)
         CardGraphicsLayerState(
-            offset = offset,
             translationY = cardTranslationY,
             scale = cardScale,
             alpha = cardAlpha,
