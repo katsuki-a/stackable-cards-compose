@@ -22,15 +22,17 @@ class MainActivity : ComponentActivity() {
             SampleMaterialTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     CardList(
+                        count = 100,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                    ) { index ->
-                        Text(
-                            modifier = Modifier.padding(16.dp),
-                            text = "Card $index",
-                        )
-                    }
+                        content = { index ->
+                            Text(
+                                modifier = Modifier.padding(16.dp),
+                                text = "Card $index",
+                            )
+                        },
+                    )
                 }
             }
         }

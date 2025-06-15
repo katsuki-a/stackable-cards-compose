@@ -25,8 +25,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun CardList(
-    cardSpacing: Dp = 8.dp,
+    count: Int,
     modifier: Modifier = Modifier,
+    cardSpacing: Dp = 8.dp,
     content: @Composable (index: Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -39,7 +40,7 @@ fun CardList(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(cardSpacing),
     ) {
-        items(50) { index ->
+        items(count = count) { index ->
             CardListItem(
                 index = index,
                 cardSpacingPx = cardSpacingPx,
