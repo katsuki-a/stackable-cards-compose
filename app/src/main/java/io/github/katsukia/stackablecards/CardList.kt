@@ -40,10 +40,7 @@ fun CardList(
     count: Int,
     modifier: Modifier = Modifier,
     cardSpacing: Dp = 8.dp,
-    cardScaleFactor: Float = CardDefaults.cardScaleFactor,
-    cardTranslationFactor: Float = CardDefaults.cardTranslationFactor,
-    cardAlphaFactor: Float = CardDefaults.cardAlphaFactor,
-    cardShadowAlphaFactor: Float = CardDefaults.cardShadowAlphaFactor,
+    animationFactors: CardAnimationFactors = CardAnimationFactors(),
     content: @Composable (index: Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -63,10 +60,7 @@ fun CardList(
                 cardSpacingPx = cardSpacingPx,
                 firstVisibleItemIndex = firstVisibleItemIndex,
                 firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
-                cardScaleFactor = cardScaleFactor,
-                cardTranslationFactor = cardTranslationFactor,
-                cardAlphaFactor = cardAlphaFactor,
-                cardShadowAlphaFactor = cardShadowAlphaFactor,
+                animationFactors = animationFactors,
                 content = content
             )
         }
@@ -99,10 +93,7 @@ private fun CardListItem(
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
     modifier: Modifier = Modifier,
-    cardScaleFactor: Float,
-    cardTranslationFactor: Float,
-    cardAlphaFactor: Float,
-    cardShadowAlphaFactor: Float,
+    animationFactors: CardAnimationFactors,
     content: @Composable (index: Int) -> Unit,
 ) {
     var cardHeightPx by remember { mutableFloatStateOf(0f) }
@@ -112,10 +103,7 @@ private fun CardListItem(
         firstVisibleItemIndex = firstVisibleItemIndex,
         firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffsetPx,
         cardHeightPx = cardHeightPx,
-        cardScaleFactor = cardScaleFactor,
-        cardTranslationFactor = cardTranslationFactor,
-        cardAlphaFactor = cardAlphaFactor,
-        cardShadowAlphaFactor = cardShadowAlphaFactor,
+        animationFactors = animationFactors,
     )
     Card(
         modifier = modifier.graphicsLayer {
@@ -162,10 +150,7 @@ private fun rememberCardGraphicsLayerState(
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
     cardHeightPx: Float,
-    cardScaleFactor: Float,
-    cardTranslationFactor: Float,
-    cardAlphaFactor: Float,
-    cardShadowAlphaFactor: Float,
+    animationFactors: CardAnimationFactors,
 ): CardGraphicsLayerState {
     val offset = if (firstVisibleItemIndex >= index && cardHeightPx > 0f) {
         val offsetRatio = firstVisibleItemScrollOffsetPx / (cardHeightPx + cardSpacingPx)
@@ -173,11 +158,11 @@ private fun rememberCardGraphicsLayerState(
     } else {
         0f
     }
-    return remember(offset, cardHeightPx) {
-        val cardScale = 1f - offset * cardScaleFactor
-        val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * cardTranslationFactor
-        val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * cardAlphaFactor).coerceIn(0f, 1f)
-        val cardShadowAlpha = (offset * cardShadowAlphaFactor).coerceIn(0f, 1f)
+    return remember(offset, cardHeightPx, animationFactors) {
+        val cardScale = 1f - offset * animationFactors.scaleFactor
+        val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * animationFactors.translationFactor
+        val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * animationFactors.alphaFactor).coerceIn(0f, 1f)
+        val cardShadowAlpha = (offset * animationFactors.shadowAlphaFactor).coerceIn(0f, 1f)
         CardGraphicsLayerState(
             translationY = cardTranslationY,
             scale = cardScale,
@@ -187,13 +172,4 @@ private fun rememberCardGraphicsLayerState(
     }
 }
 
-object CardDefaults {
-    /** The factor by which to scale down cards as they scroll. */
-    const val cardScaleFactor = 0.05f
-    /** The factor by which to translate cards as they scroll. */
-    const val cardTranslationFactor = 0.95f
-    /** The factor by which to decrease the alpha of cards as they scroll. */
-    const val cardAlphaFactor = 10f
-    /** The factor by which to increase the shadow alpha of cards as they scroll. */
-    const val cardShadowAlphaFactor = 0.2f
-}
+

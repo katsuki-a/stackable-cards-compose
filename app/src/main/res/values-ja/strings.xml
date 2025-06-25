@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">StackableCardsCompose</string>
+    <string name="settings_title">アニメーション設定</string>
+    <string name="scale_factor_label">縮小係数</string>
+    <string name="scale_factor_desc">背景に移動したカードがどれだけ縮小されるかを制御します。</string>
+    <string name="translation_factor_label">移動係数</string>
+    <string name="translation_factor_desc">背景に移動したカードがどれだけ下に移動するかを制御します。</string>
+    <string name="alpha_factor_label">透明度係数</string>
+    <string name="alpha_factor_desc">背景に移動したカードがどれだけ速くフェードアウトするかを制御します。</string>
+    <string name="shadow_alpha_factor_label">影の透明度係数</string>
+    <string name="shadow_alpha_factor_desc">背景のカードにかかる影の暗さを制御します。</string>
+    <string name="reset_button_label">デフォルトに戻す</string>
+</resources>

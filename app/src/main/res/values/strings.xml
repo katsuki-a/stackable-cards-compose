@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">stackable-cards-compose</string>
+    <string name="app_name">StackableCardsCompose</string>
+    <string name="settings_title">Animation Settings</string>
+    <string name="scale_factor_label">Scale Factor</string>
+    <string name="scale_factor_desc">Controls how much the cards shrink as they go into the background.</string>
+    <string name="translation_factor_label">Translation Factor</string>
+    <string name="translation_factor_desc">Controls how much the cards move down as they go into the background.</string>
+    <string name="alpha_factor_label">Alpha Factor</string>
+    <string name="alpha_factor_desc">Controls how quickly the cards fade out as they go into the background.</string>
+    <string name="shadow_alpha_factor_label">Shadow Alpha Factor</string>
+    <string name="shadow_alpha_factor_desc">Controls the darkness of the shadow on the cards in the background.</string>
+    <string name="reset_button_label">Reset to defaults</string>
 </resources>
