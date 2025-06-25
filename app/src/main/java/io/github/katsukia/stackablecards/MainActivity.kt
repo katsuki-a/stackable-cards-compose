@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 var showBottomSheet by remember { mutableStateOf(false) }
 
                 var animationFactors by remember { mutableStateOf(CardAnimationFactors()) }
+                var orientation by remember { mutableStateOf(Orientation.Vertical) }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -45,15 +49,24 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
+                    val contentModifier =
+                        if (orientation == Orientation.Vertical) {
+                            Modifier.padding(16.dp)
+                        } else {
+                            Modifier
+                                .width(150.dp)
+                                .padding(16.dp)
+                        }
                     CardList(
                         count = 100,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
                         animationFactors = animationFactors,
+                        orientation = orientation,
                         content = { index ->
                             Text(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = contentModifier,
                                 text = "Card $index",
                             )
                         },
@@ -67,7 +80,9 @@ class MainActivity : ComponentActivity() {
                             AnimationSettingsSheet(
                                 animationFactors = animationFactors,
                                 onAnimationFactorsChange = { animationFactors = it },
-                                onResetClick = { animationFactors = CardAnimationFactors() }
+                                onResetClick = { animationFactors = CardAnimationFactors() },
+                                orientation = orientation,
+                                onOrientationChange = { orientation = it },
                             )
                         }
                     }

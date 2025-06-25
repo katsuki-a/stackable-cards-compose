@@ -1,6 +1,9 @@
 package io.github.katsukia.stackablecards
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +32,8 @@ fun AnimationSettingsSheet(
     onAnimationFactorsChange: (CardAnimationFactors) -> Unit,
     onResetClick: () -> Unit,
     modifier: Modifier = Modifier,
+    orientation: Orientation,
+    onOrientationChange: (Orientation) -> Unit,
 ) {
     Column(modifier = modifier.padding(16.dp)) {
         Text(
@@ -37,6 +42,28 @@ fun AnimationSettingsSheet(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { onOrientationChange(Orientation.Vertical) },
+                enabled = orientation != Orientation.Vertical,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = "Vertical")
+            }
+            Button(
+                onClick = { onOrientationChange(Orientation.Horizontal) },
+                enabled = orientation != Orientation.Horizontal,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = "Horizontal")
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         SettingSlider(

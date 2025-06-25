@@ -1,9 +1,13 @@
 package io.github.katsukia.stackablecards
 
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
@@ -37,6 +41,7 @@ import androidx.compose.ui.unit.dp
 fun CardList(
     count: Int,
     modifier: Modifier = Modifier,
+    orientation: Orientation = Orientation.Vertical,
     cardSpacing: Dp = 8.dp,
     animationFactors: CardAnimationFactors = CardAnimationFactors(),
     content: @Composable (index: Int) -> Unit,
@@ -46,21 +51,46 @@ fun CardList(
     val firstVisibleItemScrollOffset by remember { derivedStateOf { listState.firstVisibleItemScrollOffset.toFloat() } }
     val cardSpacingPx = with(LocalDensity.current) { cardSpacing.toPx() }
 
-    LazyColumn(
-        modifier = modifier,
-        state = listState,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(cardSpacing),
-    ) {
-        items(count = count) { index ->
-            CardListItem(
-                index = index,
-                cardSpacingPx = cardSpacingPx,
-                firstVisibleItemIndex = firstVisibleItemIndex,
-                firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
-                animationFactors = animationFactors,
-                content = content
-            )
+    when (orientation) {
+        Orientation.Vertical -> {
+            LazyColumn(
+                modifier = modifier,
+                state = listState,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(cardSpacing),
+            ) {
+                items(count = count) { index ->
+                    CardListItem(
+                        index = index,
+                        cardSpacingPx = cardSpacingPx,
+                        firstVisibleItemIndex = firstVisibleItemIndex,
+                        firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
+                        animationFactors = animationFactors,
+                        orientation = orientation,
+                        content = content
+                    )
+                }
+            }
+        }
+        Orientation.Horizontal -> {
+            LazyRow(
+                modifier = modifier,
+                state = listState,
+                contentPadding = PaddingValues(vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(cardSpacing),
+            ) {
+                items(count = count) { index ->
+                    CardListItem(
+                        index = index,
+                        cardSpacingPx = cardSpacingPx,
+                        firstVisibleItemIndex = firstVisibleItemIndex,
+                        firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
+                        animationFactors = animationFactors,
+                        orientation = orientation,
+                        content = content
+                    )
+                }
+            }
         }
     }
 }
@@ -75,6 +105,7 @@ fun CardList(
  * @param firstVisibleItemScrollOffsetPx The scroll offset of the first visible item in pixels.
  * @param modifier The modifier to be applied to this composable.
  * @param animationFactors Factors to control card animations.
+ * @param orientation The orientation of the list.
  * @param content The composable function that defines the content of the card.
  */
 @Composable
@@ -85,24 +116,36 @@ private fun CardListItem(
     firstVisibleItemScrollOffsetPx: Float,
     modifier: Modifier = Modifier,
     animationFactors: CardAnimationFactors,
+    orientation: Orientation,
     content: @Composable (index: Int) -> Unit,
 ) {
-    var cardHeightPx by remember { mutableFloatStateOf(0f) }
+    var cardMainAxisSizePx by remember { mutableFloatStateOf(0f) }
     val cardGraphicsLayerState = rememberCardGraphicsLayerState(
         index = index,
         cardSpacingPx = cardSpacingPx,
         firstVisibleItemIndex = firstVisibleItemIndex,
         firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffsetPx,
-        cardHeightPx = cardHeightPx,
+        cardMainAxisSizePx = cardMainAxisSizePx,
         animationFactors = animationFactors,
+        orientation = orientation,
     )
     val cardShape = CardDefaults.shape
+
+    val sizeModifier = if (orientation == Orientation.Vertical) {
+        Modifier.fillMaxWidth()
+    } else {
+        Modifier.fillMaxHeight()
+    }
+
     Card(
-        modifier = modifier.stackableCard(
-            cardGraphicsLayerState = cardGraphicsLayerState,
-            cardShape = cardShape,
-            onHeightMeasured = { cardHeightPx = it }
-        )
+        modifier = modifier
+            .then(sizeModifier)
+            .stackableCard(
+                cardGraphicsLayerState = cardGraphicsLayerState,
+                cardShape = cardShape,
+                orientation = orientation,
+                onSizeMeasured = { cardMainAxisSizePx = it }
+            )
     ) {
         content(index)
     }
@@ -112,19 +155,26 @@ private fun CardListItem(
 private fun Modifier.stackableCard(
     cardGraphicsLayerState: CardGraphicsLayerState,
     cardShape: Shape,
-    onHeightMeasured: (Float) -> Unit
+    orientation: Orientation,
+    onSizeMeasured: (Float) -> Unit
 ): Modifier = this.then(
-    remember(cardGraphicsLayerState, cardShape) {
+    remember(cardGraphicsLayerState, cardShape, orientation) {
         Modifier
             .graphicsLayer {
+                this.translationX = cardGraphicsLayerState.translationX
                 this.translationY = cardGraphicsLayerState.translationY
                 this.scaleX = cardGraphicsLayerState.scale
                 this.scaleY = cardGraphicsLayerState.scale
                 this.alpha = cardGraphicsLayerState.alpha
             }
-            .fillMaxWidth()
             .onGloballyPositioned {
-                onHeightMeasured(it.size.height.toFloat())
+                onSizeMeasured(
+                    if (orientation == Orientation.Vertical) {
+                        it.size.height.toFloat()
+                    } else {
+                        it.size.width.toFloat()
+                    }
+                )
             }
             .drawWithContent {
                 drawContent()
@@ -161,6 +211,7 @@ private fun Modifier.stackableCard(
  * Holds the state for the graphics layer of a card.
  */
 private data class CardGraphicsLayerState(
+    val translationX: Float,
     val translationY: Float,
     val scale: Float,
     val alpha: Float,
@@ -176,22 +227,24 @@ private fun rememberCardGraphicsLayerState(
     cardSpacingPx: Float,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffsetPx: Float,
-    cardHeightPx: Float,
+    cardMainAxisSizePx: Float,
     animationFactors: CardAnimationFactors,
+    orientation: Orientation,
 ): CardGraphicsLayerState {
-    val offset = if (firstVisibleItemIndex >= index && cardHeightPx > 0f) {
-        val offsetRatio = firstVisibleItemScrollOffsetPx / (cardHeightPx + cardSpacingPx)
+    val offset = if (firstVisibleItemIndex >= index && cardMainAxisSizePx > 0f) {
+        val offsetRatio = firstVisibleItemScrollOffsetPx / (cardMainAxisSizePx + cardSpacingPx)
         firstVisibleItemIndex - index + offsetRatio
     } else {
         0f
     }
-    return remember(offset, cardHeightPx, animationFactors) {
+    return remember(offset, cardMainAxisSizePx, animationFactors, orientation) {
         val cardScale = 1f - offset * animationFactors.scaleFactor
-        val cardTranslationY = offset * (cardHeightPx + cardSpacingPx) * animationFactors.translationFactor
+        val cardTranslation = offset * (cardMainAxisSizePx + cardSpacingPx) * animationFactors.translationFactor
         val cardAlpha = if (offset < 1f) 1f else (1f - (offset - 1f) * animationFactors.alphaFactor).coerceIn(0f, 1f)
         val cardShadowAlpha = (offset * animationFactors.shadowAlphaFactor).coerceIn(0f, 1f)
         CardGraphicsLayerState(
-            translationY = cardTranslationY,
+            translationX = if (orientation == Orientation.Horizontal) cardTranslation else 0f,
+            translationY = if (orientation == Orientation.Vertical) cardTranslation else 0f,
             scale = cardScale,
             alpha = cardAlpha,
             shadowAlpha = cardShadowAlpha
