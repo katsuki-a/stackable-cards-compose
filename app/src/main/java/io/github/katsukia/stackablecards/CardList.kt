@@ -1,11 +1,8 @@
 package io.github.katsukia.stackablecards
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
@@ -16,7 +13,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -29,10 +29,7 @@ import androidx.compose.ui.unit.dp
  * @param count The number of cards to display.
  * @param modifier The modifier to apply to this composable.
  * @param cardSpacing The spacing between cards.
- * @param cardScaleFactor The factor by which to scale down cards as they scroll.
- * @param cardTranslationFactor The factor by which to translate cards as they scroll.
- * @param cardAlphaFactor The factor by which to decrease the alpha of cards as they scroll.
- * @param cardShadowAlphaFactor The factor by which to increase the shadow alpha of cards as they scroll.
+ * @param animationFactors Factors to control card animations (scale, translation, alpha) during scroll.
  * @param content The content of each card.
  */
 @Composable
@@ -68,23 +65,16 @@ fun CardList(
 }
 
 /**
- * Converts a float value to Dp.
- */
-@Composable
-private fun Float.toDp(): Dp {
-    return with(LocalDensity.current) { this@toDp.toDp() }
-}
-
-/**
- * CardListの各アイテムを表示するコンポーザブル。
- * スクロール位置に基づいてカードのアニメーション効果（スケール、透明度、影など）を適用します。
+ * A composable that displays an individual card item in the list.
+ * It applies animation effects (scaling, alpha, translation) based on the scroll position.
  *
- * @param index カードのインデックス
- * @param cardSpacingPx カード間の間隔（ピクセル単位）
- * @param firstVisibleItemIndex 表示されている最初のアイテムのインデックス
- * @param firstVisibleItemScrollOffsetPx 表示されている最初のアイテムのスクロールオフセット（ピクセル単位）
- * @param modifier このコンポーザブルに適用する[Modifier]
- * @param content カードの内容を定義するコンポーザブル関数
+ * @param index The index of the card.
+ * @param cardSpacingPx The spacing between cards in pixels.
+ * @param firstVisibleItemIndex The index of the first visible item in the list.
+ * @param firstVisibleItemScrollOffsetPx The scroll offset of the first visible item in pixels.
+ * @param modifier The modifier to be applied to this composable.
+ * @param animationFactors Factors to control card animations.
+ * @param content The composable function that defines the content of the card.
  */
 @Composable
 private fun CardListItem(
@@ -105,28 +95,49 @@ private fun CardListItem(
         cardHeightPx = cardHeightPx,
         animationFactors = animationFactors,
     )
+    val cardShape = CardDefaults.shape
     Card(
-        modifier = modifier.graphicsLayer {
-            this.translationY = cardGraphicsLayerState.translationY
-            this.scaleX = cardGraphicsLayerState.scale
-            this.scaleY = cardGraphicsLayerState.scale
-            this.alpha = cardGraphicsLayerState.alpha
-        }.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier.onGloballyPositioned {
+        modifier = modifier
+            .graphicsLayer {
+                this.translationY = cardGraphicsLayerState.translationY
+                this.scaleX = cardGraphicsLayerState.scale
+                this.scaleY = cardGraphicsLayerState.scale
+                this.alpha = cardGraphicsLayerState.alpha
+            }
+            .fillMaxWidth()
+            .onGloballyPositioned {
                 cardHeightPx = it.size.height.toFloat()
             }
-        ) {
-            content(index)
-            // Overlay a shadow on top of the card
-            Box(
-                modifier = Modifier
-                    .height(cardHeightPx.toDp())
-                    .background(Color.Black.copy(alpha = cardGraphicsLayerState.shadowAlpha))
-                    .fillMaxWidth()
-            )
-        }
+            .drawWithContent {
+                drawContent()
+                val outline = cardShape.createOutline(size, layoutDirection, this)
+                when (outline) {
+                    is Outline.Rectangle -> {
+                        drawRect(
+                            color = Color.Black,
+                            alpha = cardGraphicsLayerState.shadowAlpha,
+                        )
+                    }
+
+                    is Outline.Rounded -> {
+                        drawRoundRect(
+                            color = Color.Black,
+                            alpha = cardGraphicsLayerState.shadowAlpha,
+                            cornerRadius = outline.roundRect.bottomLeftCornerRadius,
+                        )
+                    }
+
+                    is Outline.Generic -> {
+                        drawPath(
+                            path = outline.path,
+                            color = Color.Black,
+                            alpha = cardGraphicsLayerState.shadowAlpha,
+                        )
+                    }
+                }
+            }
+    ) {
+        content(index)
     }
 }
 
