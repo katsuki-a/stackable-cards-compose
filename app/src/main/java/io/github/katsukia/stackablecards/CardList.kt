@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -97,7 +98,24 @@ private fun CardListItem(
     )
     val cardShape = CardDefaults.shape
     Card(
-        modifier = modifier
+        modifier = modifier.stackableCard(
+            cardGraphicsLayerState = cardGraphicsLayerState,
+            cardShape = cardShape,
+            onHeightMeasured = { cardHeightPx = it }
+        )
+    ) {
+        content(index)
+    }
+}
+
+@Composable
+private fun Modifier.stackableCard(
+    cardGraphicsLayerState: CardGraphicsLayerState,
+    cardShape: Shape,
+    onHeightMeasured: (Float) -> Unit
+): Modifier = this.then(
+    remember(cardGraphicsLayerState, cardShape) {
+        Modifier
             .graphicsLayer {
                 this.translationY = cardGraphicsLayerState.translationY
                 this.scaleX = cardGraphicsLayerState.scale
@@ -106,7 +124,7 @@ private fun CardListItem(
             }
             .fillMaxWidth()
             .onGloballyPositioned {
-                cardHeightPx = it.size.height.toFloat()
+                onHeightMeasured(it.size.height.toFloat())
             }
             .drawWithContent {
                 drawContent()
@@ -136,10 +154,8 @@ private fun CardListItem(
                     }
                 }
             }
-    ) {
-        content(index)
     }
-}
+)
 
 /**
  * Holds the state for the graphics layer of a card.
