@@ -5,11 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -20,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
-import androidx.compose.material3.CardDefaults
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -44,6 +44,7 @@ fun CardList(
     orientation: Orientation = Orientation.Vertical,
     cardSpacing: Dp = 8.dp,
     animationFactors: CardAnimationFactors = CardAnimationFactors(),
+    contentPadding: PaddingValues = if (orientation == Orientation.Vertical) PaddingValues(horizontal = 16.dp) else PaddingValues(vertical = 16.dp),
     content: @Composable (index: Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -51,46 +52,38 @@ fun CardList(
     val firstVisibleItemScrollOffset by remember { derivedStateOf { listState.firstVisibleItemScrollOffset.toFloat() } }
     val cardSpacingPx = with(LocalDensity.current) { cardSpacing.toPx() }
 
+    val listContent: LazyListScope.() -> Unit = {
+        items(count = count) { index ->
+            CardListItem(
+                index = index,
+                cardSpacingPx = cardSpacingPx,
+                firstVisibleItemIndex = firstVisibleItemIndex,
+                firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
+                animationFactors = animationFactors,
+                orientation = orientation,
+                content = content
+            )
+        }
+    }
+
     when (orientation) {
         Orientation.Vertical -> {
             LazyColumn(
                 modifier = modifier,
                 state = listState,
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(cardSpacing),
-            ) {
-                items(count = count) { index ->
-                    CardListItem(
-                        index = index,
-                        cardSpacingPx = cardSpacingPx,
-                        firstVisibleItemIndex = firstVisibleItemIndex,
-                        firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
-                        animationFactors = animationFactors,
-                        orientation = orientation,
-                        content = content
-                    )
-                }
-            }
+                content = listContent,
+            )
         }
         Orientation.Horizontal -> {
             LazyRow(
                 modifier = modifier,
                 state = listState,
-                contentPadding = PaddingValues(vertical = 16.dp),
+                contentPadding = contentPadding,
                 horizontalArrangement = Arrangement.spacedBy(cardSpacing),
-            ) {
-                items(count = count) { index ->
-                    CardListItem(
-                        index = index,
-                        cardSpacingPx = cardSpacingPx,
-                        firstVisibleItemIndex = firstVisibleItemIndex,
-                        firstVisibleItemScrollOffsetPx = firstVisibleItemScrollOffset,
-                        animationFactors = animationFactors,
-                        orientation = orientation,
-                        content = content
-                    )
-                }
-            }
+                content = listContent,
+            )
         }
     }
 }
@@ -251,5 +244,3 @@ private fun rememberCardGraphicsLayerState(
         )
     }
 }
-
-
